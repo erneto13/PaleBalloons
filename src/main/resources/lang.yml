@@ -1,0 +1,38 @@
+# developed by erneto13
+#
+#  ██████╗  █████╗ ██╗     ███████╗    ██████╗  █████╗ ██╗     ██╗      ██████╗  ██████╗ ███╗   ██╗███████╗
+#  ██╔══██╗██╔══██╗██║     ██╔════╝    ██╔══██╗██╔══██╗██║     ██║     ██╔═══██╗██╔═══██╗████╗  ██║██╔════╝
+#  ██████╔╝███████║██║     █████╗      ██████╔╝███████║██║     ██║     ██║   ██║██║   ██║██╔██╗ ██║███████╗
+#  ██╔═══╝ ██╔══██║██║     ██╔══╝      ██╔══██╗██╔══██║██║     ██║     ██║   ██║██║   ██║██║╚██╗██║╚════██║
+#  ██║     ██║  ██║███████╗███████╗    ██████╔╝██║  ██║███████╗███████╗╚██████╔╝╚██████╔╝██║ ╚████║███████║
+#  ╚═╝     ╚═╝  ╚═╝╚══════╝╚══════╝    ╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝╚══════╝
+
+# This file contains all messages displayed by the plugin.
+# All messages support MiniMessage format for rich text formatting.
+#
+# ⚠️ IMPORTANT:
+# - Supports MiniMessage format: <red>, <bold>, <gradient>, etc.
+# - Use %player% and %ballon% for dynamic values
+# - After modifying, use /balloons reload
+#
+# 📚 MiniMessage Documentation: https://docs.advntr.dev/minimessage/format.html
+
+messages:
+  only-players: "<red>¡Solo los jugadores pueden usar este comando!"
+  player-not-found: "<red>¡Jugador no encontrado!"
+  balloon-not-found: "<red>¡Globo no encontrado!"
+  balloon-not-owned: "<red>¡No posees este globo!"
+
+  balloon-equipped: "<green>✓ Equipado: <yellow>%balloon%"
+  balloon-unequipped: "<yellow>Globo desequipado"
+  balloon-received: "<green>¡Has recibido: <yellow>%balloon%"
+  balloon-given: "<green>Le diste <yellow>%balloon% <green>a <yellow>%player%"
+  balloon-removed: "<red>Removiste <yellow>%balloon% <red>de <yellow>%player%"
+
+  balloons-list-header: "<gold>Globos Disponibles:"
+  reload-success: "<green>¡Plugin recargado exitosamente!"
+
+gui:
+  title: "<gradient:#FF6B6B:#4ECDC4><bold>Globos"
+
+config-version: 1

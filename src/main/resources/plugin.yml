@@ -1,0 +1,22 @@
+name: PaleBalloons
+version: '${version}'
+main: me.erneto.ballons.PaleBalloons
+api-version: '1.21'
+authors: [ erneto13 ]
+description: A lightweight balloon cosmetics plugin with realistic physics!
+softdepend: [ PlaceholderAPI ]
+libraries:
+  - com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:2.21.0
+  - com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:2.21.0
+
+commands:
+  balloons:
+    description: Open the balloons menu
+    aliases: [ balloon, globos, globo ]
+    permission: balloons.use
+    usage: /<command>
+
+permissions:
+  balloons.use:
+    description: Allows using the balloons menu
+    default: true

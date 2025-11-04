@@ -1,0 +1,319 @@
+# developed by erneto13
+#
+#  ██████╗  █████╗ ██╗     ███████╗    ██████╗  █████╗ ██╗     ██╗      ██████╗  ██████╗ ███╗   ██╗███████╗
+#  ██╔══██╗██╔══██╗██║     ██╔════╝    ██╔══██╗██╔══██╗██║     ██║     ██╔═══██╗██╔═══██╗████╗  ██║██╔════╝
+#  ██████╔╝███████║██║     █████╗      ██████╔╝███████║██║     ██║     ██║   ██║██║   ██║██╔██╗ ██║███████╗
+#  ██╔═══╝ ██╔══██║██║     ██╔══╝      ██╔══██╗██╔══██║██║     ██║     ██║   ██║██║   ██║██║╚██╗██║╚════██║
+#  ██║     ██║  ██║███████╗███████╗    ██████╔╝██║  ██║███████╗███████╗╚██████╔╝╚██████╔╝██║ ╚████║███████║
+#  ╚═╝     ╚═╝  ╚═╝╚══════╝╚══════╝    ╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝╚══════╝
+
+# This file defines all available balloon cosmetics on the server.
+# Balloons float above players and follow them with realistic physics!
+#
+# ⚠️ IMPORTANT:
+# - IDs must be unique and lowercase
+# - Scale and offset values are decimals (use dots, not commas)
+# - After modifying this file, use /balloons reload
+#
+# 🎈 DISPLAY TYPES:
+# 1. BLOCK: Use Minecraft blocks (block-data: "gold_block")
+# 2. ITEM: Use custom model data from resource packs (model-data: 1001)
+# 3. SKULL: Use player heads with custom textures (skull-texture: "texture-hash")
+
+balloons:
+  # ┌────────────────────────────────────────────────────────────────────────┐
+  # │ EXAMPLE 1: Block Display Balloon                                      │
+  # │ Uses vanilla Minecraft blocks as balloons                             │
+  # └────────────────────────────────────────────────────────────────────────┘
+
+  red_balloon:
+    name: "<red><bold>Red Balloon"
+    description:
+      - "<gray>A classic red balloon"
+      - "<gray>floating above your head!"
+      - ""
+      - "<gray>✦ Common"
+
+    rarity: COMMON
+    permission: null
+
+    # Display type: BLOCK
+    block-data: "red_wool"
+
+    scale:
+      x: 1.0
+      y: 1.0
+      z: 1.0
+
+    offset:
+      x: 0.0
+      y: 0.5
+      z: 0.0
+
+    rotation: 0
+
+  blue_balloon:
+    name: "<blue><bold>Blue Balloon"
+    description:
+      - "<gray>A peaceful blue balloon"
+      - "<gray>that follows you everywhere!"
+
+    rarity: COMMON
+    permission: null
+
+    block-data: "blue_wool"
+
+    scale:
+      x: 1.0
+      y: 1.0
+      z: 1.0
+
+    offset:
+      x: 0.0
+      y: 0.5
+      z: 0.0
+
+    rotation: 0
+
+  golden_balloon:
+    name: "<gold><bold>Golden Balloon"
+    description:
+      - "<gray>A shiny golden balloon"
+      - "<gray>for VIP players!"
+      - ""
+      - "<green>✦ Uncommon"
+
+    rarity: UNCOMMON
+    permission: "balloons.vip"
+
+    block-data: "gold_block"
+
+    scale:
+      x: 1.2
+      y: 1.2
+      z: 1.2
+
+    offset:
+      x: 0.0
+      y: 0.6
+      z: 0.0
+
+    rotation: 0
+
+  # ┌────────────────────────────────────────────────────────────────────────┐
+  # │ EXAMPLE 2: Custom Model Data Balloon (requires resource pack)        │
+  # │ Uses custom 3D models from your resource pack                         │
+  # └────────────────────────────────────────────────────────────────────────┘
+
+  rainbow_balloon:
+    name: "<rainbow><bold>Rainbow Balloon"
+    description:
+      - "<gray>All the colors of the rainbow!"
+      - "<gray>Super rare and beautiful!"
+      - ""
+      - "<gold>✦✦ Legendary"
+
+    rarity: LEGENDARY
+    permission: "balloons.premium"
+
+    # Display type: ITEM with custom model data
+    model-data: 1001
+
+    scale:
+      x: 1.5
+      y: 1.5
+      z: 1.5
+
+    offset:
+      x: 0.0
+      y: 0.8
+      z: 0.0
+
+    rotation: 0
+
+  heart_balloon:
+    name: "<light_purple><bold>Heart Balloon"
+    description:
+      - "<gray>Show some love!"
+      - "<gray>Spread positivity!"
+      - ""
+      - "<blue>✦ Rare"
+
+    rarity: RARE
+    permission: null
+
+    model-data: 1002
+
+    scale:
+      x: 1.3
+      y: 1.3
+      z: 1.3
+
+    offset:
+      x: 0.0
+      y: 0.7
+      z: 0.0
+
+    rotation: 0
+
+  # ┌────────────────────────────────────────────────────────────────────────┐
+  # │ EXAMPLE 3: Custom Skull Balloon (player heads)                        │
+  # │ Uses custom textured player heads as balloons                         │
+  # └────────────────────────────────────────────────────────────────────────┘
+
+  earth_balloon:
+    name: "<gradient:#00FF00:#0000FF><bold>Earth Balloon"
+    description:
+      - "<gray>Our beautiful planet!"
+      - "<gray>Carry the world on your shoulders!"
+      - ""
+      - "<light_purple>✦✦ Epic"
+
+    rarity: EPIC
+    permission: "balloons.epic"
+
+    # Display type: SKULL
+    # Get texture hashes from https://minecraft-heads.com/
+    skull-texture: "d0f7e96d83b220a5a49beb06539cc0f8c0d1f25f0e7e935d33e8a0b7e7c0b5a9"
+
+    scale:
+      x: 1.4
+      y: 1.4
+      z: 1.4
+
+    offset:
+      x: 0.0
+      y: 0.9
+      z: 0.0
+
+    rotation: 0
+
+  moon_balloon:
+    name: "<white><bold>Moon Balloon"
+    description:
+      - "<gray>Reach for the moon!"
+      - "<gray>Shine bright in the night!"
+
+    rarity: RARE
+    permission: null
+
+    skull-texture: "3c93a67f3c9e1e57e9e2e3c3a9f1a7e9b8e7d5c4b3a2d1c0b9a8f7e6d5c4b3a2"
+
+    scale:
+      x: 1.3
+      y: 1.3
+      z: 1.3
+
+    offset:
+      x: 0.0
+      y: 0.8
+      z: 0.0
+
+    rotation: 0
+
+  # ┌────────────────────────────────────────────────────────────────────────┐
+  # │ EXAMPLE 4: Advanced Balloons with Special Effects                     │
+  # └────────────────────────────────────────────────────────────────────────┘
+
+  diamond_balloon:
+    name: "<aqua><bold>Diamond Balloon"
+    description:
+      - "<gray>The rarest balloon!"
+      - "<gray>Sparkles with luxury!"
+      - ""
+      - "<red>✦✦✦ Mythic"
+
+    rarity: MYTHIC
+    permission: "balloons.mythic"
+
+    block-data: "diamond_block"
+
+    scale:
+      x: 1.6
+      y: 1.6
+      z: 1.6
+
+    offset:
+      x: 0.0
+      y: 1.0
+      z: 0.0
+
+    rotation: 0
+
+  emerald_balloon:
+    name: "<green><bold>Emerald Balloon"
+    description:
+      - "<gray>Green as grass!"
+      - "<gray>Wealthy and prestigious!"
+
+    rarity: EPIC
+    permission: null
+
+    block-data: "emerald_block"
+
+    scale:
+      x: 1.5
+      y: 1.5
+      z: 1.5
+
+    offset:
+      x: 0.0
+      y: 0.9
+      z: 0.0
+
+    rotation: 0
+
+  # ┌────────────────────────────────────────────────────────────────────────┐
+  # │ EXAMPLE 5: Themed Balloons                                            │
+  # └────────────────────────────────────────────────────────────────────────┘
+
+  halloween_balloon:
+    name: "<gold><bold>Halloween Balloon"
+    description:
+      - "<gray>Spooky and fun!"
+      - "<gray>Perfect for October!"
+      - ""
+      - "<blue>✦ Rare"
+
+    rarity: RARE
+    permission: null
+
+    block-data: "pumpkin"
+
+    scale:
+      x: 1.3
+      y: 1.3
+      z: 1.3
+
+    offset:
+      x: 0.0
+      y: 0.7
+      z: 0.0
+
+    rotation: 0
+
+  christmas_balloon:
+    name: "<red><bold>Christmas Balloon"
+    description:
+      - "<gray>Ho ho ho!"
+      - "<gray>Festive and jolly!"
+
+    rarity: RARE
+    permission: null
+
+    block-data: "red_concrete"
+
+    scale:
+      x: 1.3
+      y: 1.3
+      z: 1.3
+
+    offset:
+      x: 0.0
+      y: 0.7
+      z: 0.0
+
+    rotation: 0
+
+# DO NOT TOUCH THIS!
+config-version: 1
