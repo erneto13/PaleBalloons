@@ -16,23 +16,20 @@ class BalloonProtectionListener(private val plugin: PaleBalloons) : Listener {
     fun onPlayerInteractAtEntity(event: PlayerInteractAtEntityEvent) {
         val entity = event.rightClicked
 
-        // Protect balloon display entities
-        if (entity is Display && entity.customName?.startsWith("Balloon:") == true) {
+        if (entity is ArmorStand && entity.customName?.startsWith("Balloon:") == true) {
             event.isCancelled = true
             return
         }
 
-        // Protect lead anchors
         if (entity is Chicken && entity.customName?.startsWith("BalloonAnchor:") == true) {
             event.isCancelled = true
             return
         }
 
-        // Protect leash hitches connected to balloons
         if (entity is LeashHitch) {
             entity.getNearbyEntities(5.0, 5.0, 5.0).forEach { nearby ->
                 if ((nearby is Chicken && nearby.customName?.startsWith("BalloonAnchor:") == true) ||
-                    (nearby is Display && nearby.customName?.startsWith("Balloon:") == true)) {
+                    (nearby is ArmorStand && nearby.customName?.startsWith("Balloon:") == true)) {
                     event.isCancelled = true
                     return
                 }
@@ -56,7 +53,7 @@ class BalloonProtectionListener(private val plugin: PaleBalloons) : Listener {
             val hitch = event.entity as LeashHitch
             hitch.getNearbyEntities(5.0, 5.0, 5.0).forEach { nearby ->
                 if ((nearby is Chicken && nearby.customName?.startsWith("BalloonAnchor:") == true) ||
-                    (nearby is Display && nearby.customName?.startsWith("Balloon:") == true)) {
+                    (nearby is ArmorStand && nearby.customName?.startsWith("Balloon:") == true)) {
                     event.isCancelled = true
                     return
                 }
@@ -70,7 +67,7 @@ class BalloonProtectionListener(private val plugin: PaleBalloons) : Listener {
             val hitch = event.entity as LeashHitch
             hitch.getNearbyEntities(5.0, 5.0, 5.0).forEach { nearby ->
                 if ((nearby is Chicken && nearby.customName?.startsWith("BalloonAnchor:") == true) ||
-                    (nearby is Display && nearby.customName?.startsWith("Balloon:") == true)) {
+                    (nearby is ArmorStand && nearby.customName?.startsWith("Balloon:") == true)) {
                     event.isCancelled = true
                     return
                 }
