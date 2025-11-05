@@ -34,10 +34,12 @@ class PaleBalloons : ZapperJavaPlugin() {
         registerCommands()
         registerListeners()
 
-        // Cleanup orphaned entities on startup
-        Bukkit.getScheduler().runTaskLater(this, Runnable {
-            balloonManager.cleanupOrphanedEntities()
-        }, 40L)
+        Bukkit.getScheduler()
+                .runTaskLater(
+                        this,
+                        Runnable { balloonManager.cleanupOrphanedEntities() },
+                        balloonManager.getCleanupStartupDelay()
+                )
 
         logger.info("PaleBalloons plugin enabled successfully!")
     }

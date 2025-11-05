@@ -9,7 +9,7 @@
 
 #
 # This is the main configuration file for the PaleBalloons plugin.
-# Here you can configure database settings.
+# Here you can configure database settings and balloon physics.
 #
 # ⚠️ IMPORTANT:
 # - After modifying this file, use /balloons reload
@@ -29,6 +29,78 @@ database:
   name: balloons
   user: root
   password: ""
+
+# Balloon Physics Settings
+# These values control how balloons move and behave
+physics:
+  # Base height of the balloon above the player (in blocks)
+  balloon-height: 2.5
+
+  # Minimum movement required to be considered "moving" (in blocks)
+  # Lower values = more sensitive to small movements
+  idle-threshold: 0.1
+
+  # Speed of the bobbing animation (higher = faster bobbing)
+  bob-speed: 2.0
+
+  # Speed of the swaying animation (higher = faster swaying)
+  sway-speed: 1.5
+
+  # How much the balloon bobs up and down (in blocks)
+  bob-amplitude: 0.15
+
+  # How much the balloon sways side to side (in blocks)
+  sway-amplitude: 0.1
+
+  # Distance behind the player the balloon follows (in blocks)
+  follow-distance: 1.0
+
+  # Maximum distance before balloon teleports to player (in blocks)
+  # Prevents balloons from getting stuck too far away
+  max-distance: 5.0
+
+  # Height of the lead anchor relative to the armor stand base (in blocks)
+  # This should match where the helmet/head is positioned on the armor stand
+  # For normal armor stands, the head is approximately 1.5 blocks above the base
+  # Adjust this if you see a gap between the lead and the balloon
+  lead-anchor-height: 1.5
+
+  # Fine-tune offset for the lead anchor (in blocks)
+  # Positive values move the anchor up, negative values move it down
+  lead-anchor-offset: 0.0
+
+  # Cleanup radius for old leads and hitches (in blocks)
+  cleanup-radius: 10.0
+
+  # How fast the balloon catches up to the player (0.0 - 1.0)
+  # Higher = faster catch-up, Lower = smoother following
+  catch-up-speed: 0.3
+
+  # Maximum catch-up speed per tick (in blocks)
+  max-catch-up-speed: 0.5
+
+  # Tilt angle multiplier for balloon rotation (degrees per block of movement)
+  tilt-multiplier: 30.0
+
+  # Additional tilt when swaying (degrees)
+  sway-tilt-multiplier: 15.0
+
+  # Maximum idle time to reach full animation (in seconds)
+  max-idle-time: 2.0
+
+  # How often the balloon updates (in ticks, 20 ticks = 1 second)
+  # Lower = smoother animation, Higher = better performance
+  # Recommended: 1 (every tick) for smooth animations
+  update-interval: 1
+
+# Balloon Entity Settings
+entity:
+  # Startup delay before cleaning orphaned entities (in ticks)
+  # Gives time for all players to load before cleanup
+  cleanup-startup-delay: 40
+
+  # Delay before re-equipping balloon after teleport (in ticks)
+  respawn-delay: 3
 
 # DO NOT TOUCH THIS!
 config-version: 1
