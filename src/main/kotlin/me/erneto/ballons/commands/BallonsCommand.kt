@@ -10,11 +10,12 @@ import revxrsal.commands.annotation.Subcommand
 import revxrsal.commands.bukkit.actor.BukkitCommandActor
 import revxrsal.commands.bukkit.annotation.CommandPermission
 
-@Command("paleballon", "balloon")
+@Command("paleballons", "balloon")
 class BalloonsCommand(private val balloonManager: BalloonManager) {
 
-    @Command("editor")
-    suspend fun menu(actor: BukkitCommandActor) {
+    @Subcommand("editor")
+    @CommandPermission("balloons.admin")
+    fun menu(actor: BukkitCommandActor) {
         if (!actor.isPlayer) {
             Msg.send(actor.sender(), "messages.only-players")
             return
@@ -96,6 +97,7 @@ class BalloonsCommand(private val balloonManager: BalloonManager) {
     }
 
     @Subcommand("list")
+    @CommandPermission("balloons.admin")
     fun list(actor: BukkitCommandActor) {
         val balloons = balloonManager.getAllBalloons()
 
@@ -110,6 +112,7 @@ class BalloonsCommand(private val balloonManager: BalloonManager) {
     }
 
     @Subcommand("info")
+    @CommandPermission("balloons.admin")
     fun info(actor: BukkitCommandActor) {
         val count = balloonManager.getActiveBalloonCount()
         Msg.sendParsed(

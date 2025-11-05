@@ -11,28 +11,28 @@
 # All messages support MiniMessage format for rich text formatting.
 #
 # ⚠️ IMPORTANT:
-# - Supports MiniMessage format: <red>, <bold>, <gradient>, etc.
+# - Supports MiniMessage format: <gray>, <bold>, <gradient>, etc.
 # - Use %player% and %ballon% for dynamic values
 # - After modifying, use /balloons reload
 #
 # 📚 MiniMessage Documentation: https://docs.advntr.dev/minimessage/format.html
 
 messages:
-  only-players: "<red>¡Solo los jugadores pueden usar este comando!"
-  player-not-found: "<red>¡Jugador no encontrado!"
-  balloon-not-found: "<red>¡Globo no encontrado!"
-  balloon-not-owned: "<red>¡No posees este globo!"
+  only-players: "<#ea062c>Only players can use this command!"
+  player-not-found: "<#ea062c>Player not found!"
+  balloon-not-found: "<#ea062c>Balloon not found!"
+  balloon-not-owned: "<#ea062c>You do not own this balloon!"
 
-  balloon-equipped: "<green>✓ Equipado: <yellow>%balloon%"
-  balloon-unequipped: "<yellow>Globo desequipado"
-  balloon-received: "<green>¡Has recibido: <yellow>%balloon%"
-  balloon-given: "<green>Le diste <yellow>%balloon% <green>a <yellow>%player%"
-  balloon-removed: "<red>Removiste <yellow>%balloon% <red>de <yellow>%player%"
+  balloon-equipped: "<#94ff15>Equipped: <#f7db29>%balloon%"
+  balloon-unequipped: "<#f7db29>Balloon unequipped"
+  balloon-received: "<#94ff15>You have received: <#f7db29>%balloon%"
+  balloon-given: "<#94ff15>You gave <#f7db29>%balloon% <#94ff15>to <#f7db29>%player%"
+  balloon-removed: "<#f7db29>Balloon removed"
 
-  balloons-list-header: "<gold>Globos Disponibles:"
-  reload-success: "<green>¡Plugin recargado exitosamente!"
+  balloons-list-header: "<#f7db29>Globos Disponibles:"
+  reload-success: "<#94ff15>¡Plugin recargado exitosamente!"
 
 gui:
-  title: "<gradient:#FF6B6B:#4ECDC4><bold>Globos"
+  title: "<#000000>PaleBallons Editor"
 
 config-version: 1

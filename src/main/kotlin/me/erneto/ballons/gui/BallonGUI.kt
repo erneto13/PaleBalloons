@@ -16,6 +16,8 @@ class BalloonGUI(private val balloonManager: BalloonManager) {
 
     private lateinit var inventory: Inventory
     private lateinit var player: Player
+    private var currentPage = 0
+    private val balloonsPerPage = 14 // 7 slots per row, 2 rows
 
     companion object {
         private val activeGUIs = mutableMapOf<Inventory, BalloonGUI>()
@@ -24,8 +26,9 @@ class BalloonGUI(private val balloonManager: BalloonManager) {
         fun removeGUI(inventory: Inventory) = activeGUIs.remove(inventory)
     }
 
-    suspend fun open(player: Player) {
+    fun open(player: Player, page: Int = 0) {
         this.player = player
+        this.currentPage = page
         val title = Msg.parse(Msg.getMsg("gui.title"))
         inventory = Bukkit.createInventory(null, 54, title)
 
@@ -34,77 +37,102 @@ class BalloonGUI(private val balloonManager: BalloonManager) {
         player.openInventory(inventory)
     }
 
-    private suspend fun setupItems() {
-        val equipped = Data.getEquippedBalloon(player.uniqueId)
+    private fun setupItems() {
+        inventory.clear()
 
-        // Show all balloons
-        val owned = Data.getOwnedBalloons(player.uniqueId)
         val allBalloons = balloonManager.getAllBalloons()
             .values
             .sortedBy { it.rarity.ordinal }
 
-        var slot = 10
-        for (balloon in allBalloons) {
-            if (slot > 23) break
+        //calculate total pages
+        val totalPages = (allBalloons.size + balloonsPerPage - 1) / balloonsPerPage
+        val startIndex = currentPage * balloonsPerPage
+        val endIndex = minOf(startIndex + balloonsPerPage, allBalloons.size)
+        val balloonsOnPage = allBalloons.subList(startIndex, endIndex)
 
-            val isOwned = owned.contains(balloon.id)
-            val isEquipped = balloon.id == equipped
+        //balloons in slots 10-16 (first row)
+        val firstRowSlots = listOf(10, 11, 12, 13, 14, 15, 16)
+        //balloons in slots 19-25 (second row)
+        val secondRowSlots = listOf(19, 20, 21, 22, 23, 24, 25)
+        val allSlots = firstRowSlots + secondRowSlots
 
-            inventory.setItem(slot, createBalloonItem(balloon, isOwned, isEquipped))
-            slot++
+        balloonsOnPage.forEachIndexed { index, balloon ->
+            if (index < allSlots.size) {
+                inventory.setItem(allSlots[index], createBalloonItem(balloon))
+            }
         }
 
-        // Close button
-        inventory.setItem(48, createCloseItem())
+        val separatorSlots = listOf(37, 38, 39, 40, 41, 42, 43)
+        separatorSlots.forEach { slot ->
+            inventory.setItem(slot, createSeparatorItem())
+        }
+
+        if (currentPage > 0) {
+            inventory.setItem(46, createPreviousPageItem())
+        }
+
+        if (player.hasPermission("balloons.admin")) {
+            inventory.setItem(48, createNewBalloonItem())
+        }
+
+        inventory.setItem(50, createCloseItem())
+
+        if (currentPage < totalPages - 1) {
+            inventory.setItem(52, createNextPageItem())
+        }
     }
 
-    private fun createBalloonItem(
-        balloon: BalloonData,
-        isOwned: Boolean,
-        isEquipped: Boolean
-    ): ItemStack {
-        val material = if (isOwned) Material.STRING else Material.BARRIER
-        val item = ItemStack(material)
+    private fun createBalloonItem(balloon: BalloonData): ItemStack {
+        val item = ItemStack(Material.STRING)
         val meta = item.itemMeta!!
 
         meta.displayName(Msg.parse("<${balloon.rarity.color}>${balloon.name}"))
 
         val lore = mutableListOf<String>()
+        lore.add("")
+        lore.add("<#c1c1c1>ID: <#f7db29>${balloon.id}")
+        lore.add("<#c1c1c1>Rarity: ${balloon.rarity.color}${balloon.rarity.displayName}")
+        lore.add("")
         lore.addAll(balloon.description)
         lore.add("")
-        lore.add(
-            if (isOwned) {
-                if (isEquipped) "<green>✓ Equipado" else "<yellow>Click para equipar"
-            } else {
-                "<red>✗ No desbloqueado"
-            }
-        )
+        lore.add("<#f7db29>Right-click <#c1c1c1>to edit")
+        lore.add("<#ea062c>Shift + Right-click <#c1c1c1>to delete")
 
         meta.lore(lore.map { Msg.parse(it) })
-
-        if (isEquipped) {
-            meta.addEnchant(Enchantment.UNBREAKING, 1, true)
-            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS)
-        }
-
         item.itemMeta = meta
         return item
     }
 
-    private fun createEquippedItem(balloon: BalloonData): ItemStack {
-        val item = ItemStack(Material.STRING)
+    private fun createSeparatorItem(): ItemStack {
+        val item = ItemStack(Material.GLASS_PANE)
         val meta = item.itemMeta!!
+        meta.displayName(Msg.parse(" "))
+        item.itemMeta = meta
+        return item
+    }
 
-        meta.displayName(Msg.parse("<gold>Equipped: ${balloon.name}"))
-        meta.lore(
-            listOf(
-                Msg.parse("<gray>Right-click to unequip")
-            )
-        )
+    private fun createPreviousPageItem(): ItemStack {
+        val item = ItemStack(Material.ARROW)
+        val meta = item.itemMeta!!
+        meta.displayName(Msg.parse("<#4d94eb>Previous Page"))
+        meta.lore(listOf(Msg.parse("<#c1c1c1>Page $currentPage")))
+        item.itemMeta = meta
+        return item
+    }
 
-        meta.addEnchant(Enchantment.UNBREAKING, 1, true)
-        meta.addItemFlags(ItemFlag.HIDE_ENCHANTS)
+    private fun createNextPageItem(): ItemStack {
+        val item = ItemStack(Material.ARROW)
+        val meta = item.itemMeta!!
+        meta.displayName(Msg.parse("<#4d94eb>Next Page"))
+        meta.lore(listOf(Msg.parse("<#c1c1c1>Page ${currentPage + 2}")))
+        item.itemMeta = meta
+        return item
+    }
 
+    private fun createNewBalloonItem(): ItemStack {
+        val item = ItemStack(Material.ANVIL)
+        val meta = item.itemMeta!!
+        meta.displayName(Msg.parse("<#4d94eb><bold>New Balloon"))
         item.itemMeta = meta
         return item
     }
@@ -112,49 +140,72 @@ class BalloonGUI(private val balloonManager: BalloonManager) {
     private fun createCloseItem(): ItemStack {
         val item = ItemStack(Material.IRON_DOOR)
         val meta = item.itemMeta!!
-        meta.displayName(Msg.parse("<red>Cerrar"))
+        meta.displayName(Msg.parse("<#ea062c><bold>Close"))
         item.itemMeta = meta
         return item
     }
 
-    suspend fun handleClick(player: Player, slot: Int, isRightClick: Boolean) {
+    suspend fun handleClick(
+        player: Player,
+        slot: Int,
+        isRightClick: Boolean,
+        isShiftClick: Boolean,
+        clickedItem: ItemStack?
+    ) {
         when (slot) {
-            4 -> {
-                // Unequip if right-click on equipped item
-                if (isRightClick) {
-                    balloonManager.unequipBalloon(player)
-                    Msg.send(player, "messages.balloon-unequipped")
-                    open(player)
+            46 -> {
+                if (currentPage > 0) {
+                    open(player, currentPage - 1)
                 }
             }
 
-            in 18..44 -> {
-                val allBalloons = balloonManager.getAllBalloons()
-                    .values
-                    .sortedBy { it.rarity.ordinal }
+            48 -> {
+                if (player.hasPermission("balloons.admin")) {
+                    player.closeInventory()
+                    Msg.send(player, "<#ea062c>TODO: Soon")
+                }
+            }
 
-                val index = slot - 18
-                if (index < allBalloons.size) {
-                    val balloon = allBalloons.elementAt(index)
-                    val owned = Data.getOwnedBalloons(player.uniqueId)
+            50 -> {
+                player.closeInventory()
+            }
 
-                    if (owned.contains(balloon.id)) {
-                        val success = balloonManager.equipBalloon(player, balloon.id)
-                        if (success) {
-                            Msg.send(
-                                player, "messages.balloon-equipped",
-                                "balloon" to balloon.name
-                            )
-                            Msg.playSound(player, "entity.player.levelup")
-                            open(player)
+            52 -> {
+                val allBalloons = balloonManager.getAllBalloons().values
+                val totalPages = (allBalloons.size + balloonsPerPage - 1) / balloonsPerPage
+                if (currentPage < totalPages - 1) {
+                    open(player, currentPage + 1)
+                }
+            }
+
+            in listOf(10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25) -> {
+                val allSlots = listOf(10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25)
+                val index = allSlots.indexOf(slot)
+
+                if (index != -1) {
+                    val allBalloons = balloonManager.getAllBalloons()
+                        .values
+                        .sortedBy { it.rarity.ordinal }
+
+                    val startIndex = currentPage * balloonsPerPage
+                    val balloonIndex = startIndex + index
+
+                    if (balloonIndex < allBalloons.size) {
+                        val balloon = allBalloons.elementAt(balloonIndex)
+
+                        if (isShiftClick && isRightClick) {
+                            if (player.hasPermission("balloons.admin")) {
+                                Msg.send(player, "<ea062c>Soon :: ${balloon.name}")
+                            }
+                        } else if (!isRightClick) {
+                            if (player.hasPermission("balloons.admin")) {
+                                player.closeInventory()
+                                Msg.send(player, "<#ea062c>Soon :: ${balloon.name}")
+                            }
                         }
-                    } else {
-                        Msg.send(player, "messages.balloon-not-owned")
                     }
                 }
             }
-
-            49 -> player.closeInventory()
         }
     }
 

@@ -6,12 +6,14 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
+import org.bukkit.event.inventory.InventoryDragEvent
 
 class BalloonGUIListener : Listener {
 
     @EventHandler
     suspend fun onInventoryClick(event: InventoryClickEvent) {
         val gui = BalloonGUI.getGUI(event.inventory) ?: return
+
         event.isCancelled = true
 
         val player = event.whoClicked as? Player ?: return
@@ -19,7 +21,22 @@ class BalloonGUIListener : Listener {
 
         if (slot < 0 || slot >= event.inventory.size) return
 
-        gui.handleClick(player, slot, event.isRightClick)
+        val clickedItem = event.currentItem
+        if (clickedItem == null || clickedItem.type.isAir) return
+
+        gui.handleClick(
+            player,
+            slot,
+            event.isRightClick,
+            event.isShiftClick,
+            clickedItem
+        )
+    }
+
+    @EventHandler
+    fun onInventoryDrag(event: InventoryDragEvent) {
+        val gui = BalloonGUI.getGUI(event.inventory) ?: return
+        event.isCancelled = true
     }
 
     @EventHandler
