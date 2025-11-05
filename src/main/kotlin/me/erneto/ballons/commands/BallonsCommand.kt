@@ -10,10 +10,10 @@ import revxrsal.commands.annotation.Subcommand
 import revxrsal.commands.bukkit.actor.BukkitCommandActor
 import revxrsal.commands.bukkit.annotation.CommandPermission
 
-@Command("balloons", "balloon", "globos", "globo")
+@Command("paleballon", "balloon")
 class BalloonsCommand(private val balloonManager: BalloonManager) {
 
-    @Command("balloons")
+    @Command("editor")
     suspend fun menu(actor: BukkitCommandActor) {
         if (!actor.isPlayer) {
             Msg.send(actor.sender(), "messages.only-players")

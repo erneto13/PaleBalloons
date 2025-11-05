@@ -37,23 +37,15 @@ class BalloonGUI(private val balloonManager: BalloonManager) {
     private suspend fun setupItems() {
         val equipped = Data.getEquippedBalloon(player.uniqueId)
 
-        // Show equipped balloon
-        if (equipped != null) {
-            val balloon = balloonManager.getBalloon(equipped)
-            balloon?.let {
-                inventory.setItem(4, createEquippedItem(it))
-            }
-        }
-
         // Show all balloons
         val owned = Data.getOwnedBalloons(player.uniqueId)
         val allBalloons = balloonManager.getAllBalloons()
             .values
             .sortedBy { it.rarity.ordinal }
 
-        var slot = 18
+        var slot = 10
         for (balloon in allBalloons) {
-            if (slot > 44) break
+            if (slot > 23) break
 
             val isOwned = owned.contains(balloon.id)
             val isEquipped = balloon.id == equipped
@@ -63,7 +55,7 @@ class BalloonGUI(private val balloonManager: BalloonManager) {
         }
 
         // Close button
-        inventory.setItem(49, createCloseItem())
+        inventory.setItem(48, createCloseItem())
     }
 
     private fun createBalloonItem(
@@ -103,10 +95,10 @@ class BalloonGUI(private val balloonManager: BalloonManager) {
         val item = ItemStack(Material.STRING)
         val meta = item.itemMeta!!
 
-        meta.displayName(Msg.parse("<gold>🎈 Equipado: ${balloon.name}"))
+        meta.displayName(Msg.parse("<gold>Equipped: ${balloon.name}"))
         meta.lore(
             listOf(
-                Msg.parse("<gray>Click derecho para desequipar")
+                Msg.parse("<gray>Right-click to unequip")
             )
         )
 
@@ -118,7 +110,7 @@ class BalloonGUI(private val balloonManager: BalloonManager) {
     }
 
     private fun createCloseItem(): ItemStack {
-        val item = ItemStack(Material.RED_CONCRETE)
+        val item = ItemStack(Material.IRON_DOOR)
         val meta = item.itemMeta!!
         meta.displayName(Msg.parse("<red>Cerrar"))
         item.itemMeta = meta
