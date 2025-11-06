@@ -2,15 +2,19 @@ package me.erneto.ballons.gui
 
 import me.erneto.ballons.BalloonManager
 import me.erneto.ballons.models.BalloonData
+import me.erneto.ballons.models.BalloonDisplayType
 import me.erneto.ballons.storage.Data
 import me.erneto.ballons.utils.Msg
 import org.bukkit.Bukkit
+import org.bukkit.Bukkit.createBlockData
+import org.bukkit.Bukkit.createPlayerProfile
 import org.bukkit.Material
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Player
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemFlag
 import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.meta.SkullMeta
 
 class BalloonGUI(private val balloonManager: BalloonManager) {
 
@@ -83,22 +87,43 @@ class BalloonGUI(private val balloonManager: BalloonManager) {
     }
 
     private fun createBalloonItem(balloon: BalloonData): ItemStack {
-        val item = ItemStack(Material.STRING)
-        val meta = item.itemMeta!!
+        val item = when (balloon.displayType) {
+            BalloonDisplayType.BLOCK -> {
+                try {
+                    val blockData = createBlockData(balloon.blockData!!)
+                    ItemStack(blockData.material)
+                } catch (e: Exception) {
+                    ItemStack(Material.STONE)
+                }
+            }
 
-        meta.displayName(Msg.parse("<${balloon.rarity.color}>${balloon.name}"))
+            BalloonDisplayType.SKULL -> {
+                val skull = ItemStack(Material.PLAYER_HEAD)
+                val skullMeta = skull.itemMeta as SkullMeta
+
+                val profile = createPlayerProfile(java.util.UUID.randomUUID())
+                val textures = profile.textures
+                try {
+                    textures.skin = java.net.URL("http://textures.minecraft.net/texture/${balloon.skullTexture}")
+                    profile.setTextures(textures)
+                    skullMeta.ownerProfile = profile
+                } catch (e: Exception) {
+                }
+
+                skull.itemMeta = skullMeta
+                skull
+            }
+        }
+
+        val meta = item.itemMeta!!
+        meta.displayName(Msg.parseItem("${balloon.name}"))
 
         val lore = mutableListOf<String>()
         lore.add("")
-        lore.add("<#c1c1c1>ID: <#f7db29>${balloon.id}")
-        lore.add("<#c1c1c1>Rarity: ${balloon.rarity.color}${balloon.rarity.displayName}")
-        lore.add("")
-        lore.addAll(balloon.description)
-        lore.add("")
-        lore.add("<#f7db29>Right-click <#c1c1c1>to edit")
-        lore.add("<#ea062c>Shift + Right-click <#c1c1c1>to delete")
+        lore.add("<#f7db29>Right-click to edit")
+        lore.add("<#ea062c>Shift + Right-click to delete")
 
-        meta.lore(lore.map { Msg.parse(it) })
+        meta.lore(lore.map { Msg.parseItem(it) })
         item.itemMeta = meta
         return item
     }
@@ -107,6 +132,7 @@ class BalloonGUI(private val balloonManager: BalloonManager) {
         val item = ItemStack(Material.GLASS_PANE)
         val meta = item.itemMeta!!
         meta.displayName(Msg.parse(" "))
+        meta.isHideTooltip = true
         item.itemMeta = meta
         return item
     }
@@ -114,8 +140,8 @@ class BalloonGUI(private val balloonManager: BalloonManager) {
     private fun createPreviousPageItem(): ItemStack {
         val item = ItemStack(Material.ARROW)
         val meta = item.itemMeta!!
-        meta.displayName(Msg.parse("<#4d94eb>Previous Page"))
-        meta.lore(listOf(Msg.parse("<#c1c1c1>Page $currentPage")))
+        meta.displayName(Msg.parseItem("<#4d94eb>Previous Page"))
+        meta.lore(listOf(Msg.parseItem("<#c1c1c1>Page $currentPage")))
         item.itemMeta = meta
         return item
     }
@@ -123,8 +149,8 @@ class BalloonGUI(private val balloonManager: BalloonManager) {
     private fun createNextPageItem(): ItemStack {
         val item = ItemStack(Material.ARROW)
         val meta = item.itemMeta!!
-        meta.displayName(Msg.parse("<#4d94eb>Next Page"))
-        meta.lore(listOf(Msg.parse("<#c1c1c1>Page ${currentPage + 2}")))
+        meta.displayName(Msg.parseItem("<#4d94eb>Next Page"))
+        meta.lore(listOf(Msg.parseItem("<#c1c1c1>Page ${currentPage + 2}")))
         item.itemMeta = meta
         return item
     }
@@ -132,7 +158,7 @@ class BalloonGUI(private val balloonManager: BalloonManager) {
     private fun createNewBalloonItem(): ItemStack {
         val item = ItemStack(Material.ANVIL)
         val meta = item.itemMeta!!
-        meta.displayName(Msg.parse("<#4d94eb><bold>New Balloon"))
+        meta.displayName(Msg.parseItem("<#4d94eb><bold>New Balloon"))
         item.itemMeta = meta
         return item
     }
@@ -140,7 +166,7 @@ class BalloonGUI(private val balloonManager: BalloonManager) {
     private fun createCloseItem(): ItemStack {
         val item = ItemStack(Material.IRON_DOOR)
         val meta = item.itemMeta!!
-        meta.displayName(Msg.parse("<#ea062c><bold>Close"))
+        meta.displayName(Msg.parseItem("<#ea062c><bold>Close"))
         item.itemMeta = meta
         return item
     }

@@ -9,9 +9,12 @@ data class ActiveBalloon(
     val player: UUID,
     val balloon: BalloonData,
     val displayEntity: Entity,
+    val knotEntity: Entity?,
     val leadAnchor: Chicken,
     var lastLocation: Location,
     var idleTime: Double,
     var bobPhase: Double,
-    var swayPhase: Double
+    var swayPhase: Double,
+    var knotBobPhase: Double,
+    var knotSwayPhase: Double
 )

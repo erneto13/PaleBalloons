@@ -10,7 +10,7 @@
 # This file contains all messages displayed by the plugin.
 # All messages support MiniMessage format for rich text formatting.
 #
-# ⚠️ IMPORTANT:
+# IMPORTANT:
 # - Supports MiniMessage format: <gray>, <bold>, <gradient>, etc.
 # - Use %player% and %ballon% for dynamic values
 # - After modifying, use /balloons reload

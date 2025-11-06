@@ -16,7 +16,10 @@ class BalloonProtectionListener(private val plugin: PaleBalloons) : Listener {
     fun onPlayerInteractAtEntity(event: PlayerInteractAtEntityEvent) {
         val entity = event.rightClicked
 
-        if (entity is ArmorStand && entity.customName?.startsWith("Balloon:") == true) {
+        if (entity is ArmorStand &&
+            (entity.customName?.startsWith("Balloon:") == true ||
+                    entity.customName?.startsWith("BalloonKnot:") == true)
+        ) {
             event.isCancelled = true
             return
         }
@@ -29,7 +32,9 @@ class BalloonProtectionListener(private val plugin: PaleBalloons) : Listener {
         if (entity is LeashHitch) {
             entity.getNearbyEntities(5.0, 5.0, 5.0).forEach { nearby ->
                 if ((nearby is Chicken && nearby.customName?.startsWith("BalloonAnchor:") == true) ||
-                    (nearby is ArmorStand && nearby.customName?.startsWith("Balloon:") == true)) {
+                    (nearby is ArmorStand && (nearby.customName?.startsWith("Balloon:") == true ||
+                            nearby.customName?.startsWith("BalloonKnot:") == true))
+                ) {
                     event.isCancelled = true
                     return
                 }
@@ -53,7 +58,9 @@ class BalloonProtectionListener(private val plugin: PaleBalloons) : Listener {
             val hitch = event.entity as LeashHitch
             hitch.getNearbyEntities(5.0, 5.0, 5.0).forEach { nearby ->
                 if ((nearby is Chicken && nearby.customName?.startsWith("BalloonAnchor:") == true) ||
-                    (nearby is ArmorStand && nearby.customName?.startsWith("Balloon:") == true)) {
+                    (nearby is ArmorStand && (nearby.customName?.startsWith("Balloon:") == true ||
+                            nearby.customName?.startsWith("BalloonKnot:") == true))
+                ) {
                     event.isCancelled = true
                     return
                 }
@@ -67,7 +74,9 @@ class BalloonProtectionListener(private val plugin: PaleBalloons) : Listener {
             val hitch = event.entity as LeashHitch
             hitch.getNearbyEntities(5.0, 5.0, 5.0).forEach { nearby ->
                 if ((nearby is Chicken && nearby.customName?.startsWith("BalloonAnchor:") == true) ||
-                    (nearby is ArmorStand && nearby.customName?.startsWith("Balloon:") == true)) {
+                    (nearby is ArmorStand && (nearby.customName?.startsWith("Balloon:") == true ||
+                            nearby.customName?.startsWith("BalloonKnot:") == true))
+                ) {
                     event.isCancelled = true
                     return
                 }

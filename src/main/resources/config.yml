@@ -93,6 +93,36 @@ physics:
   # Recommended: 1 (every tick) for smooth animations
   update-interval: 1
 
+# Balloon Knot Settings
+# Visual knot that appears below the balloon with independent animation
+knot:
+  # Enable or disable the knot visual
+  enabled: true
+
+  # Vertical offset from the balloon (in blocks)
+  # Negative values place it below the balloon
+  offset: -0.3
+
+  # Scale of the knot (0.1 to 1.0)
+  # Smaller values = smaller knot
+  scale: 0.4
+
+  # Independent animation settings for the knot
+  # Speed of the knot bobbing animation (higher = faster bobbing)
+  bob-speed: 1.5
+
+  # How much the knot bobs up and down (in blocks)
+  bob-amplitude: 0.1
+
+  # Speed of the knot swaying animation (higher = faster swaying)
+  sway-speed: 1.0
+
+  # How much the knot sways side to side (in blocks)
+  sway-amplitude: 0.05
+
+  # Tilt angle multiplier for knot rotation (degrees per block of movement)
+  tilt-multiplier: 20.0
+
 # Balloon Entity Settings
 entity:
   # Startup delay before cleaning orphaned entities (in ticks)

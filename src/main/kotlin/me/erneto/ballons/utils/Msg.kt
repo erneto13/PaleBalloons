@@ -2,6 +2,7 @@ package me.erneto.ballons.utils
 
 import me.clip.placeholderapi.PlaceholderAPI
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.title.TitlePart
 import org.bukkit.Sound
@@ -17,6 +18,14 @@ object Msg {
 
     fun parse(msg: String): Component {
         return miniMsg.deserialize(msg)
+    }
+
+    fun parseItem(msg: String): Component {
+        return miniMsg.deserialize(msg).decoration(TextDecoration.ITALIC, false)
+    }
+
+    fun parseItem(msg: String, player: Player): Component {
+        return miniMsg.deserialize(placeholder(msg, player)).decoration(TextDecoration.ITALIC, false)
     }
 
     fun send(player: Player, path: String) {

@@ -13,6 +13,7 @@ import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.entity.*
 import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.meta.SkullMeta
 import org.bukkit.metadata.FixedMetadataValue
 import org.bukkit.scheduler.BukkitTask
 import org.bukkit.util.EulerAngle
@@ -23,7 +24,6 @@ class BalloonManager(private val plugin: PaleBalloons) {
     private val balloonRegistry = mutableMapOf<String, BalloonData>()
     private lateinit var updateTask: BukkitTask
 
-    // Physics constants loaded from config
     private var BALLOON_HEIGHT = 2.5
     private var IDLE_THRESHOLD = 0.1
     private var BOB_SPEED = 2.0
@@ -43,6 +43,15 @@ class BalloonManager(private val plugin: PaleBalloons) {
     private var UPDATE_INTERVAL = 1L
     private var CLEANUP_STARTUP_DELAY = 40L
     private var RESPAWN_DELAY = 3L
+
+    private var KNOT_ENABLED = true
+    private var KNOT_OFFSET = -0.3
+    private var KNOT_SCALE = 0.4f
+    private var KNOT_BOB_SPEED = 1.5
+    private var KNOT_BOB_AMPLITUDE = 0.1
+    private var KNOT_SWAY_SPEED = 1.0
+    private var KNOT_SWAY_AMPLITUDE = 0.05
+    private var KNOT_TILT_MULTIPLIER = 20.0
 
     init {
         loadPhysicsConfig()
@@ -73,12 +82,20 @@ class BalloonManager(private val plugin: PaleBalloons) {
         CLEANUP_STARTUP_DELAY = config.getLong("entity.cleanup-startup-delay", 40L)
         RESPAWN_DELAY = config.getLong("entity.respawn-delay", 3L)
 
+        KNOT_ENABLED = config.getBoolean("knot.enabled", true)
+        KNOT_OFFSET = config.getDouble("knot.offset", -0.3)
+        KNOT_SCALE = config.getDouble("knot.scale", 0.4).toFloat()
+        KNOT_BOB_SPEED = config.getDouble("knot.bob-speed", 1.5)
+        KNOT_BOB_AMPLITUDE = config.getDouble("knot.bob-amplitude", 0.1)
+        KNOT_SWAY_SPEED = config.getDouble("knot.sway-speed", 1.0)
+        KNOT_SWAY_AMPLITUDE = config.getDouble("knot.sway-amplitude", 0.05)
+        KNOT_TILT_MULTIPLIER = config.getDouble("knot.tilt-multiplier", 20.0)
+
         plugin.logger.info("Physics configuration loaded")
     }
 
     private fun loadBalloons() {
         val config = FileManager.get("balloons") ?: return
-
         val section = config.getConfigurationSection("balloons") ?: return
 
         for (id in section.getKeys(false)) {
@@ -86,7 +103,6 @@ class BalloonManager(private val plugin: PaleBalloons) {
 
             val displayType =
                 when {
-                    config.contains("$path.model-data") -> BalloonDisplayType.ITEM
                     config.contains("$path.block-data") -> BalloonDisplayType.BLOCK
                     config.contains("$path.skull-texture") -> BalloonDisplayType.SKULL
                     else -> {
@@ -103,15 +119,13 @@ class BalloonManager(private val plugin: PaleBalloons) {
                     rarity =
                         try {
                             BalloonRarity.valueOf(
-                                config.getString("$path.rarity")?.uppercase()
-                                    ?: "COMMON"
+                                config.getString("$path.rarity")?.uppercase() ?: "COMMON"
                             )
                         } catch (e: Exception) {
                             BalloonRarity.COMMON
                         },
                     permission = config.getString("$path.permission"),
                     displayType = displayType,
-                    modelData = config.getInt("$path.model-data", -1).takeIf { it != -1 },
                     blockData = config.getString("$path.block-data"),
                     skullTexture = config.getString("$path.skull-texture"),
                     scale =
@@ -126,7 +140,8 @@ class BalloonManager(private val plugin: PaleBalloons) {
                             config.getDouble("$path.offset.y", 0.0),
                             config.getDouble("$path.offset.z", 0.0)
                         ),
-                    rotation = config.getDouble("$path.rotation", 0.0).toFloat()
+                    rotation = config.getDouble("$path.rotation", 0.0).toFloat(),
+                    knotBlockData = config.getString("$path.knot-block-data")
                 )
 
             balloonRegistry[id] = balloon
@@ -155,6 +170,7 @@ class BalloonManager(private val plugin: PaleBalloons) {
         removeBalloon(player.uniqueId)
 
         val armorStand = createBalloonArmorStand(player, balloon) ?: return false
+        val knotStand = if (KNOT_ENABLED) createKnotArmorStand(player, balloon, armorStand) else null
         val leadAnchor = createLeadAnchor(player, armorStand)
 
         val active =
@@ -162,11 +178,14 @@ class BalloonManager(private val plugin: PaleBalloons) {
                 player = player.uniqueId,
                 balloon = balloon,
                 displayEntity = armorStand,
+                knotEntity = knotStand,
                 leadAnchor = leadAnchor,
                 lastLocation = player.location.clone(),
                 idleTime = 0.0,
                 bobPhase = 0.0,
-                swayPhase = 0.0
+                swayPhase = 0.0,
+                knotBobPhase = 0.0,
+                knotSwayPhase = 0.0
             )
 
         activeBalloons[player.uniqueId] = active
@@ -202,17 +221,9 @@ class BalloonManager(private val plugin: PaleBalloons) {
                         }
                     }
 
-                    BalloonDisplayType.ITEM -> {
-                        val item = ItemStack(Material.PAPER)
-                        val meta = item.itemMeta!!
-                        meta.setCustomModelData(balloon.modelData!!)
-                        item.itemMeta = meta
-                        item
-                    }
-
                     BalloonDisplayType.SKULL -> {
                         val skull = ItemStack(Material.PLAYER_HEAD)
-                        val meta = skull.itemMeta as org.bukkit.inventory.meta.SkullMeta
+                        val meta = skull.itemMeta as SkullMeta
 
                         val profile = Bukkit.createPlayerProfile(UUID.randomUUID())
                         val textures = profile.textures
@@ -224,9 +235,7 @@ class BalloonManager(private val plugin: PaleBalloons) {
                             profile.setTextures(textures)
                             meta.ownerProfile = profile
                         } catch (e: Exception) {
-                            plugin.logger.warning(
-                                "Invalid skull texture: ${balloon.skullTexture}"
-                            )
+                            plugin.logger.warning("Invalid skull texture: ${balloon.skullTexture}")
                         }
 
                         skull.itemMeta = meta
@@ -244,11 +253,50 @@ class BalloonManager(private val plugin: PaleBalloons) {
         }
     }
 
+    private fun createKnotArmorStand(
+        player: Player,
+        balloon: BalloonData,
+        balloonStand: ArmorStand
+    ): ArmorStand? {
+        val knotLoc = balloonStand.location.clone().add(0.0, KNOT_OFFSET, 0.0)
+
+        return player.world.spawn(knotLoc, ArmorStand::class.java) { stand ->
+            stand.setBasePlate(false)
+            stand.isVisible = false
+            stand.isInvulnerable = true
+            stand.canPickupItems = false
+            stand.setGravity(false)
+            stand.isSmall = true
+            stand.isMarker = true
+            stand.isCollidable = false
+            stand.customName = "BalloonKnot:${player.uniqueId}"
+            stand.isCustomNameVisible = false
+
+            val knotItem = if (balloon.knotBlockData != null) {
+                try {
+                    val blockData = Bukkit.createBlockData(balloon.knotBlockData)
+                    ItemStack(blockData.material)
+                } catch (e: Exception) {
+                    plugin.logger.warning("Invalid knot block data: ${balloon.knotBlockData}")
+                    ItemStack(Material.OAK_FENCE)
+                }
+            } else {
+                ItemStack(Material.OAK_FENCE)
+            }
+
+            stand.equipment!!.helmet = knotItem
+
+            stand.setMetadata("balloon_knot", FixedMetadataValue(plugin, balloon.id))
+            stand.setMetadata(
+                "pale_balloon_knot",
+                FixedMetadataValue(plugin, player.uniqueId.toString())
+            )
+        }
+    }
+
     private fun createLeadAnchor(player: Player, balloon: ArmorStand): Chicken {
         cleanupOldLeads(player.world, player.location)
 
-        // Position the anchor at the armor stand's head position (where the balloon visual is)
-        // ArmorStand head is at base Y + LEAD_ANCHOR_HEIGHT + custom offset
         val anchorLoc =
             balloon.location.clone().add(0.0, LEAD_ANCHOR_HEIGHT + LEAD_ANCHOR_OFFSET, 0.0)
 
@@ -287,8 +335,8 @@ class BalloonManager(private val plugin: PaleBalloons) {
             .stream()
             .filter { entity ->
                 when (entity) {
-                    is org.bukkit.entity.Item -> entity.itemStack.type == Material.LEAD
-                    is org.bukkit.entity.LeashHitch -> true
+                    is Item -> entity.itemStack.type == Material.LEAD
+                    is LeashHitch -> true
                     else -> false
                 }
             }
@@ -326,7 +374,7 @@ class BalloonManager(private val plugin: PaleBalloons) {
             }
 
             val currentLoc = player.location
-            if (!currentLoc.world!!.equals(active.lastLocation.world) ||
+            if (currentLoc.world!! != active.lastLocation.world ||
                 currentLoc.distanceSquared(active.lastLocation) > 100.0
             ) {
                 cleanupBalloon(active)
@@ -382,6 +430,9 @@ class BalloonManager(private val plugin: PaleBalloons) {
         active.bobPhase = (active.bobPhase + BOB_SPEED * 0.05) % (2 * PI)
         active.swayPhase = (active.swayPhase + SWAY_SPEED * 0.05) % (2 * PI)
 
+        active.knotBobPhase = (active.knotBobPhase + KNOT_BOB_SPEED * 0.05) % (2 * PI)
+        active.knotSwayPhase = (active.knotSwayPhase + KNOT_SWAY_SPEED * 0.05) % (2 * PI)
+
         val idleFactor = min(active.idleTime, MAX_IDLE_TIME) / MAX_IDLE_TIME
         val bobOffset = idleFactor * BOB_AMPLITUDE * sin(active.bobPhase)
         val swayOffset = idleFactor * SWAY_AMPLITUDE * sin(active.swayPhase)
@@ -417,13 +468,38 @@ class BalloonManager(private val plugin: PaleBalloons) {
         val headPose = EulerAngle(Math.toRadians(tiltZ), 0.0, Math.toRadians(tiltX))
         armorStand.headPose = headPose
 
-        // Update lead anchor to match the head position exactly
+        active.knotEntity?.let { knot ->
+            val knotBobOffset = idleFactor * KNOT_BOB_AMPLITUDE * sin(active.knotBobPhase)
+            val knotSwayOffset = idleFactor * KNOT_SWAY_AMPLITUDE * sin(active.knotSwayPhase)
+
+            val knotLoc = targetLoc.clone().add(
+                knotSwayOffset * cos(angle),
+                KNOT_OFFSET + knotBobOffset,
+                knotSwayOffset * sin(angle)
+            )
+
+            val knotTiltZ = toPlayer.z * KNOT_TILT_MULTIPLIER * -1.0
+            val knotTiltX = toPlayer.x * KNOT_TILT_MULTIPLIER * -1.0 +
+                    idleFactor * (KNOT_TILT_MULTIPLIER * 0.5) * sin(active.knotSwayPhase)
+
+            knot.teleport(knotLoc)
+            knot.setRotation(currentLoc.yaw, 0f)
+            (knot as ArmorStand).headPose = EulerAngle(
+                Math.toRadians(knotTiltZ),
+                0.0,
+                Math.toRadians(knotTiltX)
+            )
+        }
+
         active.leadAnchor.teleport(
             targetLoc.clone().add(0.0, LEAD_ANCHOR_HEIGHT + LEAD_ANCHOR_OFFSET, 0.0)
         )
 
         if (active.displayEntity.location.distance(currentLoc) > MAX_DISTANCE) {
             active.displayEntity.teleport(currentLoc.clone().add(0.0, BALLOON_HEIGHT, 0.0))
+            active.knotEntity?.teleport(
+                active.displayEntity.location.clone().add(0.0, KNOT_OFFSET, 0.0)
+            )
             active.leadAnchor.teleport(
                 active.displayEntity
                     .location
@@ -451,6 +527,7 @@ class BalloonManager(private val plugin: PaleBalloons) {
         } catch (e: Exception) {
         }
         active.leadAnchor.remove()
+        active.knotEntity?.remove()
         active.displayEntity.remove()
     }
 
@@ -470,14 +547,15 @@ class BalloonManager(private val plugin: PaleBalloons) {
             world.entities.forEach { entity ->
                 val customName = entity.customName ?: return@forEach
 
-                if ((entity is ArmorStand && customName.startsWith("Balloon:")) ||
+                if ((entity is ArmorStand && (customName.startsWith("Balloon:") || customName.startsWith("BalloonKnot:"))) ||
                     (entity is Chicken && customName.startsWith("BalloonAnchor:"))
                 ) {
-
                     try {
-                        val prefix =
-                            if (customName.startsWith("Balloon:")) "Balloon:"
-                            else "BalloonAnchor:"
+                        val prefix = when {
+                            customName.startsWith("Balloon:") -> "Balloon:"
+                            customName.startsWith("BalloonKnot:") -> "BalloonKnot:"
+                            else -> "BalloonAnchor:"
+                        }
                         val playerUUID = UUID.fromString(customName.substring(prefix.length))
                         val player = Bukkit.getPlayer(playerUUID)
 

@@ -7,10 +7,10 @@ data class BalloonData(
     val rarity: BalloonRarity,
     val permission: String?,
     val displayType: BalloonDisplayType,
-    val modelData: Int?,
     val blockData: String?,
     val skullTexture: String?,
     val scale: Triple<Float, Float, Float> = Triple(1f, 1f, 1f),
     val offset: Triple<Double, Double, Double> = Triple(0.0, 0.0, 0.0),
-    val rotation: Float = 0f
+    val rotation: Float = 0f,
+    val knotBlockData: String? = null
 )

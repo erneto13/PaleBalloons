@@ -10,28 +10,80 @@
 # This file defines all available balloon cosmetics on the server.
 # Balloons float above players and follow them with realistic physics!
 #
-# ⚠️ IMPORTANT:
+# IMPORTANT:
 # - IDs must be unique and lowercase
 # - Scale and offset values are decimals (use dots, not commas)
 # - After modifying this file, use /balloons reload
 #
-# 🎈 DISPLAY TYPES:
+# DISPLAY TYPES:
 # 1. BLOCK: Use Minecraft blocks (block-data: "gold_block")
-# 2. ITEM: Use custom model data from resource packs (model-data: 1001)
-# 3. SKULL: Use player heads with custom textures (skull-texture: "texture-hash")
+# 2. SKULL: Use player heads with custom textures (skull-texture: "texture-hash")
+#
+# KNOT OPTIONS:
+# - knot-block-data: Optional custom block for the knot (defaults to OAK_FENCE)
+# - Examples: "oak_fence", "dark_oak_fence", "chain", "iron_bars"
 
 balloons:
   red_balloon:
     name: "<red><bold>Red Balloon"
     description:
-    - "<gray>A classic red balloon"
-    - "<gray>floating above your head!"
-    - ""
-    - "<gray>✦ Common"
+      - "<gray>A classic red balloon"
+      - "<gray>floating above your head!"
+      - ""
+      - "<gray>✦ Common"
     rarity: COMMON
     permission: null
     # Display type: BLOCK
     block-data: "red_wool"
+    # Optional: Custom knot block (if not specified, uses OAK_FENCE)
+    knot-block-data: "oak_fence"
+    scale:
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    offset:
+      x: 0.0
+      y: 0.5
+      z: 0.0
+    rotation: 0
+
+  gold_balloon:
+    name: "<gold><bold>Golden Balloon"
+    description:
+      - "<gray>A shiny golden balloon"
+      - "<gray>that sparkles in the sun!"
+      - ""
+      - "<green>✦ Uncommon"
+    rarity: UNCOMMON
+    permission: "balloons.gold"
+    # Display type: BLOCK
+    block-data: "gold_block"
+    # Using chain as knot for a metallic look
+    knot-block-data: "chain"
+    scale:
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    offset:
+      x: 0.0
+      y: 0.5
+      z: 0.0
+    rotation: 0
+
+  custom_skull_balloon:
+    name: "<light_purple><bold>Custom Skull Balloon"
+    description:
+      - "<gray>A unique balloon with"
+      - "<gray>a custom texture!"
+      - ""
+      - "<blue>✦ Rare"
+    rarity: RARE
+    permission: "balloons.custom"
+    # Display type: SKULL
+    # Replace with your actual texture hash from minecraft-heads.com
+    skull-texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjBhN2I5NGM0ZTU4MWI2OTkxNTlkNDg4Yzc5NjI0YmQ4ODQ5N2VlZjU0ZjM2ZjQxYjJlNmM3YWJhNjcyIn19fQ=="
+    # Dark oak fence for variety
+    knot-block-data: "dark_oak_fence"
     scale:
       x: 1.0
       y: 1.0
