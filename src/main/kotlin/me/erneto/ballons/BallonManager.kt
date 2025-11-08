@@ -9,14 +9,17 @@ import me.erneto.ballons.models.BalloonRarity
 import me.erneto.ballons.storage.Data
 import me.erneto.ballons.utils.FileManager
 import org.bukkit.Bukkit
+import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.entity.*
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.SkullMeta
 import org.bukkit.metadata.FixedMetadataValue
+import org.bukkit.potion.PotionEffectType
 import org.bukkit.scheduler.BukkitTask
 import org.bukkit.util.EulerAngle
+import com.destroystokyo.paper.profile.ProfileProperty
 
 class BalloonManager(private val plugin: PaleBalloons) {
 
@@ -225,17 +228,17 @@ class BalloonManager(private val plugin: PaleBalloons) {
                         val skull = ItemStack(Material.PLAYER_HEAD)
                         val meta = skull.itemMeta as SkullMeta
 
-                        val profile = Bukkit.createPlayerProfile(UUID.randomUUID())
-                        val textures = profile.textures
-                        try {
-                            textures.skin =
-                                java.net.URL(
-                                    "http://textures.minecraft.net/texture/${balloon.skullTexture}"
-                                )
-                            profile.setTextures(textures)
-                            meta.ownerProfile = profile
-                        } catch (e: Exception) {
-                            plugin.logger.warning("Invalid skull texture: ${balloon.skullTexture}")
+                        val texture = balloon.skullTexture
+                        if (texture != null) {
+                            try {
+                                val profile = Bukkit.getServer().createProfile(UUID.randomUUID())
+                                profile.properties.add(ProfileProperty("textures", texture))
+                                meta.playerProfile = profile
+                            } catch (e: Exception) {
+                                plugin.logger.warning("Invalid skull texture: $texture")
+                            }
+                        } else {
+                            plugin.logger.warning("Skull texture is null for balloon: ${balloon.id}")
                         }
 
                         skull.itemMeta = meta
@@ -353,6 +356,21 @@ class BalloonManager(private val plugin: PaleBalloons) {
             )
     }
 
+    private fun shouldBalloonBeVisible(player: Player): Boolean {
+        if (player.gameMode == GameMode.SPECTATOR) return false
+        if (player.hasPotionEffect(PotionEffectType.INVISIBILITY)) return false
+
+        //check vanish (Essentials, CMI, SuperVanish, PremiumVanish)
+        if (player.hasMetadata("vanished")) {
+            val vanishMeta = player.getMetadata("vanished")
+            if (vanishMeta.isNotEmpty() && vanishMeta[0].asBoolean()) {
+                return false
+            }
+        }
+
+        return true
+    }
+
     private fun updateAllBalloons() {
         val iterator = activeBalloons.iterator()
 
@@ -368,6 +386,13 @@ class BalloonManager(private val plugin: PaleBalloons) {
 
             val equipped = Data.getFromCache(uuid)?.equippedBalloon
             if (equipped != active.balloon.id) {
+                cleanupBalloon(active)
+                iterator.remove()
+                continue
+            }
+
+            //remove balloon if player is invisible/spectator/vanish
+            if (!shouldBalloonBeVisible(player)) {
                 cleanupBalloon(active)
                 iterator.remove()
                 continue

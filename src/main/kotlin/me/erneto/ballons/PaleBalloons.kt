@@ -5,6 +5,7 @@ import me.erneto.ballons.commands.BalloonsCommand
 import me.erneto.ballons.hook.PlaceholderAPIHook
 import me.erneto.ballons.listener.BalloonGUIListener
 import me.erneto.ballons.listener.BalloonProtectionListener
+import me.erneto.ballons.listener.BalloonVisibilityListener
 import me.erneto.ballons.listener.PlayerJoinListener
 import me.erneto.ballons.listener.PlayerQuitListener
 import me.erneto.ballons.storage.Data
@@ -35,11 +36,11 @@ class PaleBalloons : ZapperJavaPlugin() {
         registerListeners()
 
         Bukkit.getScheduler()
-                .runTaskLater(
-                        this,
-                        Runnable { balloonManager.cleanupOrphanedEntities() },
-                        balloonManager.getCleanupStartupDelay()
-                )
+            .runTaskLater(
+                this,
+                Runnable { balloonManager.cleanupOrphanedEntities() },
+                balloonManager.getCleanupStartupDelay()
+            )
 
         logger.info("PaleBalloons plugin enabled successfully!")
     }
@@ -81,6 +82,7 @@ class PaleBalloons : ZapperJavaPlugin() {
         server.pluginManager.registerSuspendingEvents(PlayerQuitListener(balloonManager), this)
         server.pluginManager.registerSuspendingEvents(BalloonGUIListener(), this)
         server.pluginManager.registerEvents(BalloonProtectionListener(this), this)
+        server.pluginManager.registerEvents(BalloonVisibilityListener(balloonManager, this), this)
         logger.info("Listeners registered")
     }
 
