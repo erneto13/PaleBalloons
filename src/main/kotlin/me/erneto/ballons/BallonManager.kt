@@ -19,6 +19,7 @@ import org.bukkit.metadata.FixedMetadataValue
 import org.bukkit.potion.PotionEffectType
 import org.bukkit.scheduler.BukkitTask
 import org.bukkit.util.EulerAngle
+import org.bukkit.World
 import com.destroystokyo.paper.profile.ProfileProperty
 
 class BalloonManager(private val plugin: PaleBalloons) {
@@ -161,8 +162,17 @@ class BalloonManager(private val plugin: PaleBalloons) {
     suspend fun equipBalloon(player: Player, balloonId: String): Boolean {
         val balloon = balloonRegistry[balloonId] ?: return false
 
-        if (balloon.permission != null && !player.hasPermission(balloon.permission)) {
+        //check permission or OP
+        if (balloon.permission != null && !player.hasPermission(balloon.permission) && !player.isOp) {
             return false
+        }
+
+        //auto-grant if has permission or is OP
+        if (balloon.permission != null && (player.hasPermission(balloon.permission) || player.isOp)) {
+            val owned = Data.getOwnedBalloons(player.uniqueId)
+            if (!owned.contains(balloonId)) {
+                Data.addOwnedBalloon(player.uniqueId, balloonId)
+            }
         }
 
         val owned = Data.getOwnedBalloons(player.uniqueId)
@@ -170,31 +180,64 @@ class BalloonManager(private val plugin: PaleBalloons) {
             return false
         }
 
+        //remove existing balloon and cleanup
         removeBalloon(player.uniqueId)
+        cleanupPlayerEntities(player)
+        
+        //delay to ensure cleanup
+        Bukkit.getScheduler().runTaskLater(plugin, Runnable {
+            val armorStand = createBalloonArmorStand(player, balloon) ?: return@Runnable
+            val knotStand = if (KNOT_ENABLED) createKnotArmorStand(player, balloon, armorStand) else null
+            val leadAnchor = createLeadAnchor(player, armorStand)
 
-        val armorStand = createBalloonArmorStand(player, balloon) ?: return false
-        val knotStand = if (KNOT_ENABLED) createKnotArmorStand(player, balloon, armorStand) else null
-        val leadAnchor = createLeadAnchor(player, armorStand)
+            val active =
+                ActiveBalloon(
+                    player = player.uniqueId,
+                    balloon = balloon,
+                    displayEntity = armorStand,
+                    knotEntity = knotStand,
+                    leadAnchor = leadAnchor,
+                    lastLocation = player.location.clone(),
+                    idleTime = 0.0,
+                    bobPhase = 0.0,
+                    swayPhase = 0.0,
+                    knotBobPhase = 0.0,
+                    knotSwayPhase = 0.0
+                )
 
-        val active =
-            ActiveBalloon(
-                player = player.uniqueId,
-                balloon = balloon,
-                displayEntity = armorStand,
-                knotEntity = knotStand,
-                leadAnchor = leadAnchor,
-                lastLocation = player.location.clone(),
-                idleTime = 0.0,
-                bobPhase = 0.0,
-                swayPhase = 0.0,
-                knotBobPhase = 0.0,
-                knotSwayPhase = 0.0
-            )
-
-        activeBalloons[player.uniqueId] = active
-        Data.setEquippedBalloon(player.uniqueId, balloonId)
+            activeBalloons[player.uniqueId] = active
+            Bukkit.getScheduler().runTask(plugin, Runnable {
+                kotlinx.coroutines.runBlocking {
+                    Data.setEquippedBalloon(player.uniqueId, balloonId)
+                }
+            })
+        }, 2L)
 
         return true
+    }
+
+    private fun cleanupPlayerEntities(player: Player) {
+        player.world.getNearbyEntities(player.location, 10.0, 10.0, 10.0)
+            .filter { entity ->
+                val name = entity.customName ?: return@filter false
+                when {
+                    entity is ArmorStand && (name.startsWith("Balloon:") || name.startsWith("BalloonKnot:")) -> {
+                        name.endsWith(player.uniqueId.toString())
+                    }
+                    entity is Chicken && name.startsWith("BalloonAnchor:") -> {
+                        name.endsWith(player.uniqueId.toString())
+                    }
+                    else -> false
+                }
+            }
+            .forEach { 
+                if (it is Chicken) {
+                    try {
+                        it.setLeashHolder(null)
+                    } catch (e: Exception) {}
+                }
+                it.remove() 
+            }
     }
 
     private fun createBalloonArmorStand(player: Player, balloon: BalloonData): ArmorStand? {
@@ -333,7 +376,7 @@ class BalloonManager(private val plugin: PaleBalloons) {
         return leadAnchor
     }
 
-    private fun cleanupOldLeads(world: org.bukkit.World, location: Location) {
+    private fun cleanupOldLeads(world: World, location: Location) {
         world.getNearbyEntities(location, CLEANUP_RADIUS, CLEANUP_RADIUS, CLEANUP_RADIUS)
             .stream()
             .filter { entity ->
@@ -360,7 +403,7 @@ class BalloonManager(private val plugin: PaleBalloons) {
         if (player.gameMode == GameMode.SPECTATOR) return false
         if (player.hasPotionEffect(PotionEffectType.INVISIBILITY)) return false
 
-        //check vanish (Essentials, CMI, SuperVanish, PremiumVanish)
+        //check vanish
         if (player.hasMetadata("vanished")) {
             val vanishMeta = player.getMetadata("vanished")
             if (vanishMeta.isNotEmpty() && vanishMeta[0].asBoolean()) {
@@ -391,7 +434,7 @@ class BalloonManager(private val plugin: PaleBalloons) {
                 continue
             }
 
-            //remove balloon if player is invisible/spectator/vanish
+            //remove balloon if invisible/spectator/vanish
             if (!shouldBalloonBeVisible(player)) {
                 cleanupBalloon(active)
                 iterator.remove()

@@ -37,7 +37,6 @@ class BalloonsCommand(private val balloonManager: BalloonManager) {
         val success = balloonManager.equipBalloon(player, balloonId)
         if (success) {
             Msg.send(player, "messages.balloon-equipped", "balloon" to balloonId)
-            Msg.playSound(player, "entity.player.levelup")
         } else {
             Msg.send(player, "messages.balloon-not-found")
         }
@@ -53,6 +52,7 @@ class BalloonsCommand(private val balloonManager: BalloonManager) {
         val player = actor.asPlayer()!!
         balloonManager.unequipBalloon(player)
         Msg.send(player, "messages.balloon-unequipped")
+        Msg.playSound(player, "block.sweet_berry_bush.hurt")
     }
 
     @Subcommand("give")
