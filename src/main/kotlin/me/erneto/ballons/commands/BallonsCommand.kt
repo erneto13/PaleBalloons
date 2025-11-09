@@ -10,11 +10,11 @@ import revxrsal.commands.annotation.Subcommand
 import revxrsal.commands.bukkit.actor.BukkitCommandActor
 import revxrsal.commands.bukkit.annotation.CommandPermission
 
-@Command("paleballoons") 
+@Command("paleballoons")
+@CommandPermission("balloons.use")
 class BalloonsCommand(private val balloonManager: BalloonManager) {
 
     @Subcommand("editor")
-    @CommandPermission("balloons.admin")
     fun menu(actor: BukkitCommandActor) {
         if (!actor.isPlayer) {
             Msg.send(actor.sender(), "messages.only-players")
@@ -73,8 +73,10 @@ class BalloonsCommand(private val balloonManager: BalloonManager) {
 
         Data.addOwnedBalloon(target.uniqueId, balloonId)
         Msg.send(
-            actor.sender(), "messages.balloon-given",
-            "player" to target.name, "balloon" to balloonId
+                actor.sender(),
+                "messages.balloon-given",
+                "player" to target.name,
+                "balloon" to balloonId
         )
         Msg.send(target, "messages.balloon-received", "balloon" to balloon.name)
     }
@@ -91,8 +93,10 @@ class BalloonsCommand(private val balloonManager: BalloonManager) {
 
         Data.removeOwnedBalloon(target.uniqueId, balloonId)
         Msg.send(
-            actor.sender(), "messages.balloon-removed",
-            "player" to target.name, "balloon" to balloonId
+                actor.sender(),
+                "messages.balloon-removed",
+                "player" to target.name,
+                "balloon" to balloonId
         )
     }
 
@@ -105,8 +109,8 @@ class BalloonsCommand(private val balloonManager: BalloonManager) {
 
         balloons.values.sortedBy { it.rarity.ordinal }.forEach { balloon ->
             Msg.sendParsed(
-                actor.sender() as? Player ?: return,
-                "  <gray>- <yellow>${balloon.id} <gray>(${balloon.name}<gray>)"
+                    actor.sender() as? Player ?: return,
+                    "  <gray>- <yellow>${balloon.id} <gray>(${balloon.name}<gray>)"
             )
         }
     }
@@ -115,10 +119,7 @@ class BalloonsCommand(private val balloonManager: BalloonManager) {
     @CommandPermission("balloons.admin")
     fun info(actor: BukkitCommandActor) {
         val count = balloonManager.getActiveBalloonCount()
-        Msg.sendParsed(
-            actor.sender() as? Player ?: return,
-            "<gold>Active Balloons: <yellow>$count"
-        )
+        Msg.sendParsed(actor.sender() as? Player ?: return, "<gold>Active Balloons: <yellow>$count")
     }
 
     @Subcommand("reload")
