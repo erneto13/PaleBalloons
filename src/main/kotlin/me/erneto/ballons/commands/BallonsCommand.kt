@@ -10,7 +10,7 @@ import revxrsal.commands.annotation.Subcommand
 import revxrsal.commands.bukkit.actor.BukkitCommandActor
 import revxrsal.commands.bukkit.annotation.CommandPermission
 
-@Command("paleballons", "balloon")
+@Command("paleballoons") 
 class BalloonsCommand(private val balloonManager: BalloonManager) {
 
     @Subcommand("editor")

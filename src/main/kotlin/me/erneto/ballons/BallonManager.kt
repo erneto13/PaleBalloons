@@ -180,11 +180,13 @@ class BalloonManager(private val plugin: PaleBalloons) {
             return false
         }
 
-        //remove existing balloon and cleanup
-        removeBalloon(player.uniqueId)
-        cleanupPlayerEntities(player)
+        //remove existing balloon synchronously
+        Bukkit.getScheduler().runTask(plugin, Runnable {
+            removeBalloonSync(player.uniqueId)
+            cleanupPlayerEntitiesSync(player)
+        })
         
-        //delay to ensure cleanup
+        //delay to ensure cleanup and create new balloon
         Bukkit.getScheduler().runTaskLater(plugin, Runnable {
             val armorStand = createBalloonArmorStand(player, balloon) ?: return@Runnable
             val knotStand = if (KNOT_ENABLED) createKnotArmorStand(player, balloon, armorStand) else null
@@ -211,12 +213,12 @@ class BalloonManager(private val plugin: PaleBalloons) {
                     Data.setEquippedBalloon(player.uniqueId, balloonId)
                 }
             })
-        }, 2L)
+        }, 3L)
 
         return true
     }
 
-    private fun cleanupPlayerEntities(player: Player) {
+    private fun cleanupPlayerEntitiesSync(player: Player) {
         player.world.getNearbyEntities(player.location, 10.0, 10.0, 10.0)
             .filter { entity ->
                 val name = entity.customName ?: return@filter false
@@ -422,21 +424,21 @@ class BalloonManager(private val plugin: PaleBalloons) {
             val player = Bukkit.getPlayer(uuid)
 
             if (player == null || !player.isOnline) {
-                cleanupBalloon(active)
+                cleanupBalloonSync(active)
                 iterator.remove()
                 continue
             }
 
             val equipped = Data.getFromCache(uuid)?.equippedBalloon
             if (equipped != active.balloon.id) {
-                cleanupBalloon(active)
+                cleanupBalloonSync(active)
                 iterator.remove()
                 continue
             }
 
             //remove balloon if invisible/spectator/vanish
             if (!shouldBalloonBeVisible(player)) {
-                cleanupBalloon(active)
+                cleanupBalloonSync(active)
                 iterator.remove()
                 continue
             }
@@ -445,7 +447,7 @@ class BalloonManager(private val plugin: PaleBalloons) {
             if (currentLoc.world!! != active.lastLocation.world ||
                 currentLoc.distanceSquared(active.lastLocation) > 100.0
             ) {
-                cleanupBalloon(active)
+                cleanupBalloonSync(active)
                 iterator.remove()
 
                 Bukkit.getScheduler()
@@ -476,7 +478,7 @@ class BalloonManager(private val plugin: PaleBalloons) {
                 try {
                     active.leadAnchor.setLeashHolder(player)
                 } catch (e: Exception) {
-                    cleanupBalloon(active)
+                    cleanupBalloonSync(active)
                     iterator.remove()
                     continue
                 }
@@ -580,16 +582,18 @@ class BalloonManager(private val plugin: PaleBalloons) {
     }
 
     suspend fun unequipBalloon(player: Player) {
-        removeBalloon(player.uniqueId)
+        Bukkit.getScheduler().runTask(plugin, Runnable {
+            removeBalloonSync(player.uniqueId)
+        })
         Data.setEquippedBalloon(player.uniqueId, null)
     }
 
-    private fun removeBalloon(uuid: UUID) {
+    private fun removeBalloonSync(uuid: UUID) {
         val active = activeBalloons.remove(uuid) ?: return
-        cleanupBalloon(active)
+        cleanupBalloonSync(active)
     }
 
-    private fun cleanupBalloon(active: ActiveBalloon) {
+    private fun cleanupBalloonSync(active: ActiveBalloon) {
         try {
             active.leadAnchor.setLeashHolder(null)
         } catch (e: Exception) {
@@ -607,7 +611,7 @@ class BalloonManager(private val plugin: PaleBalloons) {
     }
 
     fun removePlayerBalloon(playerId: UUID) {
-        removeBalloon(playerId)
+        removeBalloonSync(playerId)
     }
 
     fun cleanupOrphanedEntities() {
@@ -645,7 +649,7 @@ class BalloonManager(private val plugin: PaleBalloons) {
 
     fun shutdown() {
         updateTask.cancel()
-        activeBalloons.values.forEach { cleanupBalloon(it) }
+        activeBalloons.values.forEach { cleanupBalloonSync(it) }
         activeBalloons.clear()
     }
 
@@ -657,7 +661,7 @@ class BalloonManager(private val plugin: PaleBalloons) {
         val equippedBalloons = mutableMapOf<UUID, String>()
         activeBalloons.forEach { (uuid, active) -> equippedBalloons[uuid] = active.balloon.id }
 
-        activeBalloons.values.forEach { cleanupBalloon(it) }
+        activeBalloons.values.forEach { cleanupBalloonSync(it) }
         activeBalloons.clear()
         balloonRegistry.clear()
 

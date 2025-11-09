@@ -23,16 +23,23 @@ class PlaceholderAPIHook : PlaceholderExpansion() {
         val cached = Data.getFromCache(player.uniqueId) ?: return null
 
         return when (params) {
-            // Equipped balloon
-            "equipped" -> cached.equippedBalloon ?: "None"
+            //equipped balloon NAME
+            "equipped" -> {
+                val balloonId = cached.equippedBalloon ?: return "None"
+                val balloon = plugin.getBalloonManager().getBalloon(balloonId)
+                balloon?.name ?: "None"
+            }
 
-            // Owned count
+            //equipped balloon ID
+            "equipped_id" -> cached.equippedBalloon ?: "None"
+
+            //owned count
             "owned_count" -> cached.ownedBalloons.size.toString()
 
-            // Total available
+            //total available
             "total_balloons" -> plugin.getBalloonManager().getAllBalloons().size.toString()
 
-            // Collection progress percentage
+            //collection progress percentage
             "collection_progress" -> {
                 val total = plugin.getBalloonManager().getAllBalloons().size
                 val owned = cached.ownedBalloons.size
@@ -40,7 +47,7 @@ class PlaceholderAPIHook : PlaceholderExpansion() {
                 else String.format("%.1f", (owned.toDouble() / total) * 100)
             }
 
-            // Has specific balloon
+            //has specific balloon
             else -> {
                 if (params.startsWith("has_")) {
                     val balloonId = params.removePrefix("has_")
