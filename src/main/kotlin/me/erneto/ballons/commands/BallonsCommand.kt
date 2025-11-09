@@ -14,6 +14,17 @@ import revxrsal.commands.bukkit.annotation.CommandPermission
 @CommandPermission("balloons.use")
 class BalloonsCommand(private val balloonManager: BalloonManager) {
 
+    @Command("paleballoons")
+    fun baseCommand(actor: BukkitCommandActor) {
+        if (!actor.isPlayer) {
+            Msg.send(actor.sender(), "messages.only-players")
+            return
+        }
+
+        val player = actor.asPlayer()!!
+        Msg.sendParsed(player, "<#c1c1c1>PaleBallons by @erneto13")
+    }
+
     @Subcommand("editor")
     fun menu(actor: BukkitCommandActor) {
         if (!actor.isPlayer) {
